@@ -7,6 +7,6 @@
 #' can then be imported into R or other statistics programs for analysis.
 #'
 #'
-#' @docType Package
+#' @docType package
 #' @name sortieOutputs
 NULL
