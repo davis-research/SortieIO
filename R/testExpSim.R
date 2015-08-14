@@ -25,6 +25,23 @@
 #' @export
 
 testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename=""){
+  expDf$Species <- as.character(expDf$Species)
+  simDf$Species <- as.character(simDf$Species)
+  duplicatedSpecies <- c(unique(simDf$Species), unique(expDf$Species))
+  duplicatedSpecies <- duplicatedSpecies[duplicated(duplicatedSpecies)]
+
+  newSimDf <- data.frame()
+  newExpDf <- data.frame()
+  for(i in 1:length(duplicatedSpecies)){
+    newSimDf <- rbind(newSimDf, simDf[simDf$Species==duplicatedSpecies[i],])
+    newExpDf <- rbind(newExpDf, expDf[expDf$Species==duplicatedSpecies[i],])
+  }
+
+  simDf <- newSimDf
+  expDf <- newExpDf
+  ## convert back to factors
+  expDf$Species <- as.factor(expDf$Species)
+  simDf$Species <- as.factor(simDf$Species)
 
   ## get response df started
   responsedf <- aggregate(expDf[, charactername],
@@ -42,11 +59,15 @@ testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename
     relevantSimRow <- simDf[simDf$Step==responsedf[i, "Step"] &
                               simDf$Species==responsedf[i, "Species"],
                             charactername]
+    if(length(relevantSimRow) > 5){
     responsedf[i, "simMean"] <- mean(relevantSimRow, na.rm=T)
 
     responsedf[i, "pval"] <- t.test(relevantSimRow,
                                     mu=responsedf[i, charactername])$p.value
-
+    } else{
+      responsedf[i, "simMean"] <- length(relevantSimRow)
+      responsedf[i, "pval"] <- 1
+    }
   }
 
   responsedf$signif <- ifelse(responsedf$pval > 0.05, "NS", "Sig")

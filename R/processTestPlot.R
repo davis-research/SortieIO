@@ -2,9 +2,14 @@
 #'
 #' @export
 
-processTestPlot <- function(plotname, sdir, yearoffset, charactername="", writeimage=NULL, writefile=NULL){
+processTestPlot <- function(plotname, sdir, yearoffset, charactername="", writeimage=NULL, writefile=NULL, byspecies=F){
+
+  if(byspecies==T){
+    myExpDf <- realPlots
+  } else{
+    myExpDf <- realPlots[realPlots$Plot==plotname,]
+  }
   mySimDf <- batchOutFiles(plotname, sdir, yearoffset)
-  myExpDf <- realPlots[realPlots$Plot==plotname,]
   myExpDf$Species <- as.factor(myExpDf$Species)
 
   ## make the plot

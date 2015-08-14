@@ -17,7 +17,7 @@
 #' #head(parseOutFile(dat))
 #'   @export
 
-parseOutFile <- function(df, removeSpp=c("NR", "Total")){
+parseOutFile <- function(df, removeSpp=c("Total")){
   repeatcols <- df[, 1:2]
 
   for(i in 1:length(removeSpp)){

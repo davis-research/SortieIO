@@ -24,6 +24,25 @@ plotExpSim <- function(expDf, simDf, charactername, means=F, filename="", exec=F
     stop("Sorry, your columns are not formatted correctly.")
   }
 
+
+  expDf$Species <- as.character(expDf$Species)
+  simDf$Species <- as.character(simDf$Species)
+  duplicatedSpecies <- c(unique(simDf$Species), unique(expDf$Species))
+  duplicatedSpecies <- duplicatedSpecies[duplicated(duplicatedSpecies)]
+
+  newSimDf <- data.frame()
+  newExpDf <- data.frame()
+  for(i in 1:length(duplicatedSpecies)){
+    newSimDf <- rbind(newSimDf, simDf[simDf$Species==duplicatedSpecies[i],])
+    newExpDf <- rbind(newExpDf, expDf[expDf$Species==duplicatedSpecies[i],])
+  }
+
+  simDf <- newSimDf
+  expDf <- newExpDf
+  ## convert back to factors
+  expDf$Species <- as.factor(expDf$Species)
+  simDf$Species <- as.factor(simDf$Species)
+
   ## if mean is true, then aggregate to get the mean and plot simulated values that way.
   ##
   if(means==T){
@@ -34,12 +53,13 @@ plotExpSim <- function(expDf, simDf, charactername, means=F, filename="", exec=F
     simDf <- simMeansDf
   }
 
-  expDf$Species <- as.factor(expDf$Species)
-  simDf$Species <- as.factor(simDf$Species)
-
   ymax <- ifelse(max(expDf[, charactername], na.rm=T) > max(simDf[, charactername], na.rm=T),
                  max(expDf[, charactername], na.rm=T), max(simDf[, charactername], na.rm=T))
   xmax <- max(expDf$Step)
+
+  ## get plot name
+  plotname <- gsub(".pdf", "", filename, fixed=T)
+  plotname <- gsub("results/", "", plotname, fixed=T)
   if(exec==T){
     pdf(file=filename)
   }
@@ -47,14 +67,16 @@ plotExpSim <- function(expDf, simDf, charactername, means=F, filename="", exec=F
        simDf[,charactername],
        col=simDf$Species,
        xlim=c(1,xmax),
-       ylim=c(0, ymax),
+       ylim=c(0, ymax*1.10),
        xlab="Step (Yr)",
        ylab=charactername,
+       main=plotname,
        pch=3)
   points(expDf$Step,
          expDf[,charactername],
          col=expDf$Species,
          pch=15)
+  legend("topright", legend=unique(expDf$Species), fill=unique(expDf$Species))
   if(exec==T){
     dev.off()
   }
