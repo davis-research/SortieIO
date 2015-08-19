@@ -24,11 +24,13 @@
 #'
 #' @export
 
-testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename=""){
+testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename="", subplotid=0){
   expDf$Species <- as.character(expDf$Species)
   simDf$Species <- as.character(simDf$Species)
   duplicatedSpecies <- c(unique(simDf$Species), unique(expDf$Species))
   duplicatedSpecies <- duplicatedSpecies[duplicated(duplicatedSpecies)]
+
+  simDf <- simDf[simDf$Subplot==subplotid,]
 
   newSimDf <- data.frame()
   newExpDf <- data.frame()
@@ -42,6 +44,15 @@ testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename
   ## convert back to factors
   expDf$Species <- as.factor(expDf$Species)
   simDf$Species <- as.factor(simDf$Species)
+
+  ## deal with saplings til we get better data
+  if(charactername=="AdultAbsBA"){
+    simDf[, "AdultAbsBA"] <- simDf[, "AdultAbsBA"] + simDf[, "SaplAbsBA"]
+  }
+  if(charactername=="AdultAbsDen"){
+    simDf[, "AdultAbsDen"] <- simDf[, "AdultAbsDen"] + simDf[, "SaplAbsDen"] + simDf[, "SdlAbsDen"]
+  }
+
 
   ## get response df started
   responsedf <- aggregate(expDf[, charactername],
@@ -62,8 +73,9 @@ testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename
     if(length(relevantSimRow) > 5){
     responsedf[i, "simMean"] <- mean(relevantSimRow, na.rm=T)
 
-    responsedf[i, "pval"] <- t.test(relevantSimRow,
-                                    mu=responsedf[i, charactername])$p.value
+    responsedf[i, "pval"] <- TryTTest(relevantSimRow,
+                                    mu=responsedf[i, charactername])
+
     } else{
       responsedf[i, "simMean"] <- length(relevantSimRow)
       responsedf[i, "pval"] <- 1

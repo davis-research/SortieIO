@@ -18,12 +18,12 @@
 #'
 #' @export
 
-batchOutFiles <- function(namepattern="", sdir=".", yearoffset=0){
+batchOutFiles <- function(namepattern="", sdir=".", yearoffset=0, numsubplots=1){
   listoffiles <- list.files(pattern=namepattern, path=sdir)
   listoffiles <- paste(sdir, listoffiles, sep="/")
   responseDf <- data.frame()
   for(i in 1:length(listoffiles)){
-    tempdat <- getOutFile(listoffiles[i])
+    tempdat <- getOutFile(listoffiles[i], numsubplots)
     newdf <- parseOutFile(tempdat)
     responseDf <- rbind(responseDf, newdf)
   }

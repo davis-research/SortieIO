@@ -15,11 +15,12 @@
 #'  # getOutFile(c("myoutfile1.out", "myoutfile2.out"))
 #' @export
 
-getOutFile <- function(filenames){
+getOutFile <- function(filenames, numsubplots=1){
   dat <- data.frame()
+  linestodelete <- 4+numsubplots
   for(i in 1:length(filenames)){
     importme <- readLines(filenames[i])
-    cutmeoff <- importme[-c(1:5)]
+    cutmeoff <- importme[-c(1:linestodelete)]
     storeme <- read.table(textConnection(cutmeoff),
                           header=T,
                           stringsAsFactors=F,

@@ -13,7 +13,7 @@
 #' @return This function
 #' @export
 
-plotExpSim <- function(expDf, simDf, charactername, means=F, filename="", exec=F, exportSimDf=F){
+plotExpSim <- function(expDf, simDf, charactername, means=F, filename="", exec=F, exportSimDf=F, subplotid=0){
 
   if(!("Step" %in% colnames(expDf)) |
      !("Step" %in% colnames(simDf)) |
@@ -29,6 +29,17 @@ plotExpSim <- function(expDf, simDf, charactername, means=F, filename="", exec=F
   simDf$Species <- as.character(simDf$Species)
   duplicatedSpecies <- c(unique(simDf$Species), unique(expDf$Species))
   duplicatedSpecies <- duplicatedSpecies[duplicated(duplicatedSpecies)]
+
+  simDf <- simDf[simDf$Subplot==subplotid,]
+
+
+  ## deal with saplings til we get better data
+  if(charactername=="AdultAbsBA"){
+    simDf[, "AdultAbsBA"] <- simDf[, "AdultAbsBA"] + simDf[, "SaplAbsBA"]
+  }
+  if(charactername=="AdultAbsDen"){
+    simDf[, "AdultAbsDen"] <- simDf[, "AdultAbsDen"] + simDf[, "SaplAbsDen"] + simDf[, "SdlAbsDen"]
+  }
 
   newSimDf <- data.frame()
   newExpDf <- data.frame()
