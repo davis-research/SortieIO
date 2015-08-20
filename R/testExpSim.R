@@ -25,6 +25,7 @@
 #' @export
 
 testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename="", subplotid=0){
+  require(outliers)
   expDf$Species <- as.character(expDf$Species)
   simDf$Species <- as.character(simDf$Species)
   duplicatedSpecies <- c(unique(simDf$Species), unique(expDf$Species))
@@ -70,19 +71,27 @@ testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename
     relevantSimRow <- simDf[simDf$Step==responsedf[i, "Step"] &
                               simDf$Species==responsedf[i, "Species"],
                             charactername]
+
+    allchars <- c(responsedf[i, charactername], relevantSimRow)
+    if(length(allchars) > 30){
+      allchars <- allchars[1:30]
+    }
+    #print(allchars)
     if(length(relevantSimRow) > 5){
     responsedf[i, "simMean"] <- mean(relevantSimRow, na.rm=T)
 
-    responsedf[i, "pval"] <- TryTTest(relevantSimRow,
+    responsedf[i, "dixonPval"] <- dixon.test(allchars)$p.val
+    responsedf[i, "tTestPval"] <- TryTTest(relevantSimRow,
                                     mu=responsedf[i, charactername])
 
     } else{
       responsedf[i, "simMean"] <- length(relevantSimRow)
-      responsedf[i, "pval"] <- 1
+      responsedf[i, "tTestPval"] <- 1
+      responsedf[i, "dixonPval"] <- 1
     }
   }
-
-  responsedf$signif <- ifelse(responsedf$pval > 0.05, "NS", "Sig")
+  responsedf$dSig <- ifelse(responsedf$dixonPval > 0.05, "NS", "Sig")
+  responsedf$tsig <- ifelse(responsedf$tTestPval > 0.05, "NS", "Sig")
   if(write==T){
     write.csv(responsedf, file=filename, row.names = F)
   }
