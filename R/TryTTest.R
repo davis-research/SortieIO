@@ -7,3 +7,8 @@ TryTTest <- function(...) {
   obj<-try(t.test(...), silent=TRUE)
   if (is(obj, "try-error")) return(1) else return(obj$p.value)
 }
+
+TryDTest <- function(...){
+  obj <- try(dixon.test(...), silent=T)
+  if (is(obj, "try-error")) return(1) else return(obj$p.value)
+}

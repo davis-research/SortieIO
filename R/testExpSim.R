@@ -80,7 +80,7 @@ testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename
     if(length(relevantSimRow) > 5){
     responsedf[i, "simMean"] <- mean(relevantSimRow, na.rm=T)
 
-    responsedf[i, "dixonPval"] <- dixon.test(allchars)$p.val
+    responsedf[i, "dixonPval"] <- TryDTest(allchars)
     responsedf[i, "tTestPval"] <- TryTTest(relevantSimRow,
                                     mu=responsedf[i, charactername])
 
