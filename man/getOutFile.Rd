@@ -4,7 +4,7 @@
 \alias{getOutFile}
 \title{Import a SORTIE-ND .out File Into R}
 \usage{
-getOutFile(filenames)
+getOutFile(filenames, numsubplots = 1)
 }
 \arguments{
 \item{filenames}{A vector or character string of the filenames and paths you

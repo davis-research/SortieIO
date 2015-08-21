@@ -6,7 +6,16 @@
 \usage{
 TryTTest(...)
 }
+\arguments{
+\item{...}{This function takes all the parameters that a t-test does.}
+}
+\value{
+This function returns a number representative of the p-value.
+}
 \description{
 Function taken from https://stat.ethz.ch/pipermail/r-help/2008-February/154167.html
+}
+\details{
+This function tries a t-test and returns 1 if there's an error, instead of stopping execution.
 }
 

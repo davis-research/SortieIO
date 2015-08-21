@@ -5,7 +5,8 @@
 \title{Process a plot's test data}
 \usage{
 processTestPlot(plotname, sdir, yearoffset, charactername = "",
-  writeimage = NULL, writefile = NULL, byspecies = F)
+  writeimage = NULL, writefile = NULL, byspecies = F, numsubplots = 1,
+  subplotid = 0)
 }
 \description{
 Process a plot's test data

@@ -5,7 +5,7 @@
 \title{Plot Expected And Simulated Values}
 \usage{
 plotExpSim(expDf, simDf, charactername, means = F, filename = "",
-  exec = F, exportSimDf = F)
+  exec = F, exportSimDf = F, subplotid = 0)
 }
 \arguments{
 \item{expDf}{This is a data.frame of expected results for a plot. Must contain a "Step" column (x-axis), a "Species" column (color factor), and a value column that has the name of the "charactername" parameter.}

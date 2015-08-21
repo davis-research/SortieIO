@@ -4,7 +4,8 @@
 \alias{batchOutFiles}
 \title{Process Batch Out Files For Sortie}
 \usage{
-batchOutFiles(namepattern = "", sdir = ".", yearoffset = 0)
+batchOutFiles(namepattern = "", sdir = ".", yearoffset = 0,
+  numsubplots = 1)
 }
 \arguments{
 \item{namepattern}{A character string that matches the unique part of your
