@@ -19,8 +19,21 @@
 #' @export
 
 batchOutFiles <- function(namepattern="", sdir=".", yearoffset=0, numsubplots=1){
+
+  ## type check
+  if(!is.character(namepattern) | !is.character(sdir)){
+    stop("namepattern and sdir must be character strings")
+  }
+  if(!is.numeric(yearoffset) | !is.numeric(numsubplots)){
+    stop("yearoffset and numsubplots must be numeric")
+  }
+
+
   listoffiles <- list.files(pattern=namepattern, path=sdir)
   listoffiles <- paste(sdir, listoffiles, sep="/")
+  #print(listoffiles)
+  ## error checking
+  if(listoffiles == paste(sdir, "/", sep="")){ stop("No files were found.")}
   responseDf <- data.frame()
   for(i in 1:length(listoffiles)){
     tempdat <- getOutFile(listoffiles[i], numsubplots)
@@ -30,5 +43,5 @@ batchOutFiles <- function(namepattern="", sdir=".", yearoffset=0, numsubplots=1)
 
   responseDf$Step <- responseDf$Step - yearoffset
   responseDf <- responseDf[responseDf$Step > 0,]
-  return(responseDf)
+  return(reNumber(responseDf))
 }

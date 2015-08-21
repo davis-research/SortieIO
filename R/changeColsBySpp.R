@@ -18,11 +18,19 @@
 
 changeColsBySpp <- function(df, removalkey, dead=F){
 
-  ## if dead, append "Natural.Dead. to everything and subset
+  if(!is.data.frame(df)) stop("df must be a data.frame")
+  if(!is.character(removalkey)) stop("removalkey must be a character string")
+  if(!is.logical(dead)) stop("dead must be a boolean")
+
+  ## when dead is T, that means we want to putt out the dead. We have to do it this way,
+  ## because of the way that SORTIE-ND generates summary.out files
+  ## if dead, append "Natural.Dead. to everything and subset. This circumvents the
+  ## program trying to get multiple columns with the search command by checking if dead
+  ## is true first.
   if(dead==T){
     removalkey <- paste("Natural.Dead.", removalkey, sep="")
     temp <- df[, grep(removalkey, colnames(df), value=F, fixed=T)]
-    ## else remove any NaturalDead and subset
+    ## else remove any NaturalDead and subset as normal, so we only get the one column set
   } else{
     if(length(grep("Natural.Dead", colnames(df), fixed=T))>0){
       temp <- df[, -grep("Natural.Dead", colnames(df), fixed=T)]
@@ -33,7 +41,7 @@ changeColsBySpp <- function(df, removalkey, dead=F){
 
 
   }
-  ## fix column names by removing the repeat stuff
+  ## fix column names by removing the repeat stuff, e.g., "AbsBasalArea"
   colnames(temp) <- gsub(removalkey, "", colnames(temp), fixed=T)
   ## init a newdf for response
   newdf <- data.frame()

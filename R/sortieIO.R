@@ -8,5 +8,5 @@
 #'
 #'
 #' @docType package
-#' @name sortieOutputs
+#' @name sortieIO
 NULL
