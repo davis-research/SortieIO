@@ -5,3 +5,4 @@
 workingscript.R
 SortieOutputs.Rproj
 outfiles/
+inst/extdata/outputs

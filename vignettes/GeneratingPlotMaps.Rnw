@@ -1,0 +1,254 @@
+\documentclass{article}
+
+\begin{document}
+\SweaveOpts{concordance=TRUE}
+
+\title{Generating Tree Maps For SORTIE-ND}
+\author{Samantha L. Davis}
+
+So, it's finally time to generate tree maps. When we talked about generating tree maps last, we spoke about the fact that the minimum useful plot size in SORTIE-ND is 300m x 300m. Our validation plots, from the USGS, range from about a hectare to slightly larger. So, we can do a few things.
+
+We could run simulations with our sample plots in the center, and bare ground all around them, but that wouldn't be feasible, because no forest plot is truly surrounded by bare ground.
+
+We could also place our sample plots in the center, and then generate similar plots to fill in the surrounding space. That is the plan of action.
+
+In the end, we need a tab-delimited file that has six columns: X, Y, Species, Type, Diam, Height. The first row is column headers.
+
+So, we need to do a few things. First, we need to get our USGS plot maps ready, using only data from their origin years. We need to put those plot maps in the appropriate space (between 100-200 in x,y plot space). Then, we need to figure out what distribution matches the distribution of dbh's most closely for each species -- probably normal or poisson, for ease -- and randomly generate (x,y), species, and dbh for the remaining 8 hectares of space. We might be able to use "generatePlotMap" from MakeMyForests, if we modify it to match the tree-map that we need.
+
+So first, let's convert the rotated plots that we already have into appropriate plot space. I'll import those CSVs and write them to an RData outside of this Sweave, then go from there.
+
+<<>>=
+library(MakeMyForests)
+library(SortieTreeMaps)
+load("../data/rotPlots.RData")
+@
+
+Okay, let's figure out the true sizes of our plots, since ideally, we want to work with the square ones, first.
+
+<<>>=
+
+plotnames <- unique(rotPlots$plot)
+
+getRange <- function(x){max(x)-min(x)}
+rangex <- aggregate(rotPlots$x, by=list(rotPlots$plot), FUN=getRange)
+rangey <- aggregate(rotPlots$y, by=list(rotPlots$plot), FUN=getRange)
+
+plotSizes <- data.frame(plot=rangex[,1], x=rangex[,2], y=rangey[,2], area=rangex[,2]*rangey[,2])
+plotSizes
+@
+
+Let's build an algorithm that will determine the density of trees per square meter and fill in the area with trees. The only things that will change is where we position the trees.
+
+Trees will need to be separated by dbh and species within plot. Let's use crackers as an example, since it's first on the list.
+
+<<>>=
+
+
+##find center of map for our plot size
+plotSizes$centerx <- NA
+plotSizes$centery <- NA
+
+plotSizes[,c("centerx", "centery")] <- findPlotStart(300, 300, plotSizes$x, plotSizes$y)
+
+## add those values to rotPlots by plot.
+##
+## for each plot...
+
+colnames(plotSizes) <- c("plot", "rangex", "rangey", "area", "centerx", "centery")
+newRots <- merge(plotSizes[,c(1, 4:6)], rotPlots, by=c("plot"))
+
+newRots$x <- newRots$centerx+newRots$x
+newRots$y <- newRots$centery + newRots$y
+head(newRots)
+tail(newRots)
+@
+
+Okay, so we have our new positions in plot space, for 300m x 300m plots in SORTIE. Now we just need to populate the spaces around them. Since our endgame is to build  6-column tables ready for SORTIE, let's go ahead and create a new data.frame, starting that process. That way, we're not working in and screwing up rotPlots, which has its place.
+
+<<>>=
+
+## We need to remove any records beyond the first years for our plots.
+
+keepme <- vector()
+##for each plot...
+for(i in 1:length(plotnames)){
+  minyear <- NULL
+  minyear <- min(newRots[newRots$plot==plotnames[i], "measyear"])
+  keepme <- c(keepme,
+              which(newRots$plot==plotnames[i] &
+                      newRots$measyear==minyear &
+                      newRots$firstrec==minyear))
+
+}
+
+#X, Y, Species, Type, Diam, Height
+
+sortieTrees <- data.frame(X=newRots[keepme, "x"],
+                          Y=newRots[keepme, "y"],
+                          Species=newRots[keepme, "species"],
+                          Type=newRots[keepme, "stage"],
+                          Diam=newRots[keepme, "dbh"],
+                          Height=0,
+                          Plot=newRots[keepme, "plot"],
+                          stringsAsFactors=F)
+
+sortieTrees[sortieTrees$Type=="tree", "Type"] <- "Adult"
+sortieTrees[sortieTrees$Type=="seedling", "Type"] <- "Seedling"
+
+sortieTrees[sortieTrees$Type=="Seedling", "Diam"] <- 1
+##arbitrary, because seedlings in USGS plots don't have a dbh or db10
+##measurement.
+
+head(sortieTrees)
+tail(sortieTrees)
+@
+
+We will need to export by plot, but we can do that last. Ok, so we have our points, and they should be positioned correctly within the 300m x 300 m plot space. Now, we just need to determine the densities and distributions of trees in each plot, then fill the empty spaces with trees. First, let's get a data.frame started of the unique plot+species combinations. Then we have a looping function to work with. Let's use that to calculate individuals per square meter.
+
+While we're at it, we'll also get the mean and standard deviation of log(dbh). We're doing log(dbh) because the data look relatively normal under log transformation. Also, old ecology habits die hard.
+<<>>=
+
+sortiePlotTreeNum <- aggregate(sortieTrees$Diam, by=list(sortieTrees$Plot, sortieTrees$Species), FUN=length)
+colnames(sortiePlotTreeNum) <- c("Plot", "Species", "Count")
+colnames(plotSizes)[1] <- c("Plot")
+sortiePlotTreeNum <- merge(sortiePlotTreeNum, plotSizes[,c(1,4)], by=c("Plot"))
+sortiePlotTreeNum$density <- sortiePlotTreeNum$Count / sortiePlotTreeNum$area
+
+sortieTreesDBH <- aggregate(log(sortieTrees$Diam), by=list(sortieTrees$Plot, sortieTrees$Species), FUN=bootMean)
+sortieTreesDBH$sddbh <- aggregate(log(sortieTrees$Diam), by=list(sortieTrees$Plot, sortieTrees$Species), FUN=bootSd)[,3]
+sortieTreesDBH$counts <- aggregate(sortieTrees$Diam, by=list(sortieTrees$Plot, sortieTrees$Species), FUN=length)[,3]
+
+sortieTreesDBH[is.na(sortieTreesDBH$sddbh),"sddbh"] <- 0
+colnames(sortieTreesDBH) <- c("Plot", "Species", "meandbh", "sddbh", "n")
+
+sortieTreesFinal <- merge(sortieTreesDBH, sortiePlotTreeNum[,c("Plot", "Species", "density")], by=c("Plot", "Species"))
+sortieTreesFinal$giantn <- floor(sortieTreesFinal$density * (300*300))
+
+response <- data.frame()
+for(i in 1:nrow(sortieTreesFinal)){
+  newresponse <- data.frame(Plot=sortieTreesFinal[i, "Plot"],
+                            Species=sortieTreesFinal[i, "Species"],
+                            X = runif(sortieTreesFinal[i, "giantn"], 0, 300),
+                            Y = runif(sortieTreesFinal[i, "giantn"], 0, 300),
+                            Type = "Adult",
+                            Diam = rlnorm(sortieTreesFinal[i, "giantn"],
+                                          sortieTreesFinal[i, "meandbh"],
+                                          sortieTreesFinal[i, "sddbh"]))
+  response <- rbind(response, newresponse)
+}
+
+##reorder response
+response <- response[,c("X", "Y", "Species", "Type", "Diam", "Plot")]
+response$Height <- 0
+@
+
+Okay, so we have transformed means and sd's ready, now we just need to write a function to find the missing spaces around the bounds of the filled in plot, and fill those in with trees. It may be easiest to generate for the whole 9 hectare area, then just delete any trees that fall within our already populated range.
+
+<<fig=TRUE>>=
+
+crackers <- response[response$Plot=="crackers",]
+plot(crackers$X,
+     crackers$Y,
+     col=as.factor(crackers$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+trinity <- response[response$Plot=="trinity",]
+plot(trinity$X,
+     trinity$Y,
+     col=as.factor(trinity$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+realtor <- response[response$Plot=="realtor",]
+plot(realtor$X,
+     realtor$Y,
+     col=as.factor(realtor$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+bellow <- response[response$Plot=="bellow",]
+plot(bellow$X,
+     bellow$Y,
+     col=as.factor(bellow$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+reclusive <- response[response$Plot=="reclusive",]
+plot(reclusive$X,
+     reclusive$Y,
+     col=as.factor(reclusive$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+octane <- response[response$Plot=="octane",]
+plot(octane$X,
+     octane$Y,
+     col=as.factor(octane$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+sodium <- response[response$Plot=="sodium",]
+plot(sodium$X,
+     sodium$Y,
+     col=as.factor(sodium$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+distress <- response[response$Plot=="distress",]
+plot(distress$X,
+     distress$Y,
+     col=as.factor(distress$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+gravy <- response[response$Plot=="gravy",]
+plot(gravy$X,
+     gravy$Y,
+     col=as.factor(gravy$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+trigger <- response[response$Plot=="trigger",]
+plot(trigger$X,
+     trigger$Y,
+     col=as.factor(trigger$Species),
+     pch=".")
+@
+
+<<fig=TRUE>>=
+rigid <- response[response$Plot=="rigid",]
+plot(rigid$X,
+     rigid$Y,
+     col=as.factor(rigid$Species),
+     pch=".")
+@
+
+As a final bit, we can write to tab delimited files after removing the "plot" column.
+
+<<>>=
+
+ write.table(crackers[,-c(6:7)], file="crackers.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(trinity[,-c(6:7)], file="trinity.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(realtor[,-c(6:7)], file="realtor.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(bellow[,-c(6:7)], file="bellow.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(reclusive[,-c(6:7)], file="reclusive.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(octane[,-c(6:7)], file="octane.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(sodium[,-c(6:7)], file="sodium.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(distress[,-c(6:7)], file="distress.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(gravy[,-c(6:7)], file="gravy.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(trigger[,-c(6:7)], file="trigger.txt", sep="\t", row.names=FALSE, quote=F)
+ write.table(rigid[,-c(6:7)], file="rigid.txt", sep="\t", row.names=FALSE, quote=F)
+@
+
+\end{document}
