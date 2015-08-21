@@ -1,4 +1,3 @@
-library(SortieOutputs)
 context("getOutFile")
 
 

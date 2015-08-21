@@ -1,4 +1,4 @@
 library(testthat)
-library(SortieOutputs)
+library(SortieIO)
 
-test_check("SortieOutputs")
+test_check("SortieIO")
