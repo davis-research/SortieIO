@@ -24,7 +24,7 @@
 #'
 #' @export
 
-testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename="", subplotid=0){
+testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename="", subplotid=0, simTest=F){
   require(outliers)
   expDf$Species <- as.character(expDf$Species)
   simDf$Species <- as.character(simDf$Species)
@@ -46,6 +46,7 @@ testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename
   expDf$Species <- as.factor(expDf$Species)
   simDf$Species <- as.factor(simDf$Species)
 
+
   ## deal with saplings til we get better data
   if(charactername=="AdultAbsBA"){
     simDf[, "AdultAbsBA"] <- simDf[, "AdultAbsBA"] + simDf[, "SaplAbsBA"]
@@ -55,17 +56,22 @@ testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename
   }
 
 
+
   ## get response df started
   responsedf <- aggregate(expDf[, charactername],
                           by=list(expDf$Step, expDf$Species),
                           FUN=mean,
                           na.rm=T)
+
+
   ## remove any NAs (instances where means could not be calculated)
   responsedf <- responsedf[!is.na(responsedf$x),]
   colnames(responsedf) <- c("Step", "Species", charactername)
   if(length(mymu) > 0){
     responsedf[,charactername] <- mymu
   }
+  ## testing
+  if(simTest==T){ return(responsedf) }
 
   for(i in 1:nrow(responsedf)){
     relevantSimRow <- simDf[simDf$Step==responsedf[i, "Step"] &
@@ -77,7 +83,7 @@ testExpSim <- function(expDf, simDf, charactername, mymu=NULL, write=F, filename
       allchars <- allchars[1:30]
     }
     #print(allchars)
-    if(length(relevantSimRow) > 5){
+    if(length(relevantSimRow) > 4){
     responsedf[i, "simMean"] <- mean(relevantSimRow, na.rm=T)
 
     responsedf[i, "dixonPval"] <- TryDTest(allchars)

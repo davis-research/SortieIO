@@ -33,7 +33,7 @@ batchOutFiles <- function(namepattern="", sdir=".", yearoffset=0, numsubplots=1)
   listoffiles <- paste(sdir, listoffiles, sep="/")
   #print(listoffiles)
   ## error checking
-  if(listoffiles == paste(sdir, "/", sep="")){ stop("No files were found.")}
+  #if(listoffiles == paste(sdir, "/", sep="")){ stop("No files were found.")}
   responseDf <- data.frame()
   for(i in 1:length(listoffiles)){
     tempdat <- getOutFile(listoffiles[i], numsubplots)
