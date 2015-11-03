@@ -6,7 +6,39 @@
 \usage{
 processTestPlot(plotname, sdir, yearoffset, charactername = "",
   writeimage = NULL, writefile = NULL, byspecies = F, numsubplots = 1,
-  subplotid = 0)
+  subplotid = 0, testSim = F, combineAdults = T)
+}
+\arguments{
+\item{plotname}{The name of the plot. This must be the same as what is looked
+up by realPlot, or it will bounce back.}
+
+\item{sdir}{The directory location of the output files}
+
+\item{yearoffset}{If there's a run-up -- early data you want to throw out --
+add it here. Default is 0.}
+
+\item{charactername}{The character name to analyze. Current options are
+"SdlAbsDen", "SaplAbsDen", "AdultAbsDen", "SaplAbsBA", and "AdultAbsBA"}
+
+\item{writeimage}{Pass a filename in to allow the program to generate a plot
+and write it to file.}
+
+\item{writefile}{Pass a filename in to allow the program to generate a CSV and
+write it to file.}
+
+\item{byspecies}{If you want to separate the data by plot, set this to FALSE.}
+
+\item{numsubplots}{The number of subplots in the file. It defaults to 1, the
+entire plot "subplot"}
+
+\item{subplotid}{The subplot you want to analyze. Default ID is 0, for the
+entire plot.}
+
+\item{testSim}{A testing function, if set to true, the execution will stop and
+return the simulated data instead of the full result.}
+
+\item{combineAdults}{Defaults to true, if false, Adult analyses will exclude
+ sapling and seedling counts and basal areas.}
 }
 \description{
 Process a plot's test data

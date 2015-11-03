@@ -5,7 +5,7 @@
 \title{Test For Differences Between Actual and Simulated Data}
 \usage{
 testExpSim(expDf, simDf, charactername, mymu = NULL, write = F,
-  filename = "", subplotid = 0)
+  filename = "", subplotid = 0, simTest = F)
 }
 \arguments{
 \item{expDf}{An experimental data.frame with columns "Step", "Species", and a
