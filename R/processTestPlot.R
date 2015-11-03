@@ -8,7 +8,7 @@ processTestPlot <- function(plotname, sdir, yearoffset, charactername="",
 
   if(combineAdults==T){
     realPlots$AdultAbsBA <- realPlots$AdultAbsBA + realPlots$SaplAbsBA
-    realPlots$AdultAbsDen <- realPlots$AdultAbsDen + realPlots$SaplAbsDen
+    realPlots$AdultAbsDen <- realPlots$AdultAbsDen + realPlots$SaplAbsDen + realPlots$SdlAbsDen
   }
 
   if(byspecies==T){
