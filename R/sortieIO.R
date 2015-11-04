@@ -6,6 +6,7 @@
 #' folder of output files and convert them into a more-readable CSV file which
 #' can then be imported into R or other statistics programs for analysis.
 #'
+#'The best way to learn how to use this package is to follow the examples of some preformatted Sweave files, currently found in the shared Moran Lab Box Folder.
 #'
 #' @docType package
 #' @name sortieIO

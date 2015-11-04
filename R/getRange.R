@@ -1,6 +1,8 @@
 #' Get the difference between two numbers
 #'
 #' A simple function to calculate the difference between the maximum value and the minimum value of x.
+#' 
+#' @param x A vector of numbers.
 #'
 #' @return This function returns a number.
 #'

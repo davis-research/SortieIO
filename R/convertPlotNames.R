@@ -1,5 +1,11 @@
 #' Convert plot names
 #'
+#' This function converts plotnames between their "true" names and their "code" names.
+#' 
+#' @param x The vector of plotnames
+#' @param colname The new column name
+#' @param realnames Whether or not to return the real names. E.g., if false, then code names are returned from a realname list.
+#'
 #' @export
 convertPlotNames <- function(x, colname="", realnames=F){
   plotconversion <- data.frame(plotname=c("BBBPIPO", "FRPIJE", "EMRIDGE",
